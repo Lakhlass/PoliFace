@@ -2,13 +2,13 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>SwissFaces — Connais-tu tes politiciens ?</title>
+  <title>PoliFace — Une tête, un parti</title>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Helvetica Neue', Arial, sans-serif;
       background-color: #f4f4f4;
       display: flex;
       flex-direction: column;
@@ -31,11 +31,88 @@
     .ecran.actif { display: flex; }
     .ecran.visible { opacity: 1; transform: translateY(0); }
 
-    #ecran-accueil { text-align: center; gap: 20px; }
-    #ecran-accueil h1 { font-size: 42px; color: #c0392b; }
-    #ecran-accueil p { color: #555; font-size: 16px; }
-    .drapeau { font-size: 60px; margin-bottom: 10px; }
+    /* ACCUEIL */
+    #ecran-accueil {
+      text-align: center;
+      gap: 24px;
+    }
 
+    .faces-preview {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 8px;
+      height: 90px;
+    }
+    .faces-preview img {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      object-fit: cover;
+      object-position: center top;
+      border: 3px solid white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+      margin-left: -16px;
+      opacity: 0.88;
+      transition: transform 0.2s;
+    }
+    .faces-preview img:first-child { margin-left: 0; }
+    .faces-preview img:hover { transform: translateY(-4px); opacity: 1; z-index: 10; }
+
+    .accueil-logo {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .accueil-logo h1 {
+      font-size: 48px;
+      font-weight: 800;
+      color: #1a1a1a;
+      letter-spacing: -1px;
+      line-height: 1;
+    }
+    .accueil-logo h1 span {
+      color: #c0392b;
+    }
+    .accueil-tagline {
+      font-size: 16px;
+      color: #777;
+      font-style: italic;
+      letter-spacing: 0.3px;
+    }
+
+    .accueil-stats {
+      display: flex;
+      gap: 24px;
+      justify-content: center;
+    }
+    .accueil-stats div {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+    .accueil-stats strong {
+      font-size: 22px;
+      font-weight: 700;
+      color: #1a1a1a;
+    }
+    .accueil-stats span {
+      font-size: 12px;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .separateur {
+      width: 1px;
+      height: 40px;
+      background: #ddd;
+      align-self: center;
+    }
+
+    /* MODE */
     #ecran-mode { text-align: center; gap: 15px; }
     #ecran-mode h2 { color: #333; font-size: 22px; }
     #ecran-mode p { color: #777; font-size: 15px; }
@@ -62,10 +139,10 @@
     .options-mode button .mode-desc { font-size: 13px; color: #888; font-weight: normal; display: block; margin-top: 3px; }
     .options-mode button:hover .mode-desc { color: #c0392b; }
 
+    /* CHOIX */
     #ecran-choix { text-align: center; gap: 15px; }
     #ecran-choix h2 { color: #333; font-size: 22px; }
     #ecran-choix p { color: #777; font-size: 15px; }
-    #titre-mode-choix { color: #c0392b; font-weight: bold; font-size: 14px; }
     .options-nb { display: flex; gap: 15px; margin-top: 10px; }
     .options-nb button {
       flex: 1;
@@ -85,9 +162,35 @@
       box-shadow: 0 4px 12px rgba(192,57,43,0.15);
     }
 
+    /* JEU */
     #ecran-jeu { gap: 15px; }
     #barre-progression { width: 100%; background: #ddd; border-radius: 10px; height: 8px; }
     #progression { height: 8px; background: #c0392b; border-radius: 10px; transition: width 0.4s ease; }
+
+    #chrono-container {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    #chrono-barre-bg {
+      flex: 1;
+      background: #ddd;
+      border-radius: 10px;
+      height: 6px;
+      overflow: hidden;
+    }
+    #chrono-barre {
+      height: 6px;
+      background: #2ecc71;
+      border-radius: 10px;
+      width: 100%;
+      transition: width 1s linear, background 1s linear;
+    }
+    #chrono-barre.orange { background: #f39c12; }
+    #chrono-barre.rouge { background: #e74c3c; }
+    #chrono-texte { font-size: 13px; color: #888; min-width: 30px; text-align: right; }
+
     #compteur { color: #888; font-size: 14px; align-self: flex-end; }
     #score-live { font-size: 16px; color: #333; align-self: flex-start; }
 
@@ -100,7 +203,7 @@
       width: 100%;
     }
     #photo-wrapper { width: 160px; height: 160px; margin: 0 auto 15px; }
-#carte img {
+    #carte img {
       width: 160px;
       height: 160px;
       object-fit: cover;
@@ -178,9 +281,19 @@
       75% { transform: translateX(5px); }
     }
 
-    #feedback { font-size: 15px; font-weight: bold; min-height: 22px; transition: opacity 0.2s; }
+    #feedback { font-size: 15px; font-weight: bold; min-height: 22px; }
     #feedback.ok { color: #2ecc71; }
     #feedback.ko { color: #e74c3c; }
+
+    #points-flash {
+      font-size: 22px;
+      font-weight: bold;
+      min-height: 30px;
+      opacity: 0;
+      transform: translateY(0);
+      transition: opacity 0.3s, transform 0.5s;
+    }
+    #points-flash.visible { opacity: 1; transform: translateY(-8px); }
 
     #btn-suivant {
       visibility: hidden;
@@ -242,10 +355,19 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
+    /* FIN */
     #ecran-fin { text-align: center; gap: 20px; }
     #ecran-fin h2 { font-size: 28px; color: #333; }
     #score-final { font-size: 52px; font-weight: bold; color: #c0392b; }
     #score-final span { font-size: 22px; color: #888; }
+    #details-fin {
+      font-size: 14px;
+      color: #888;
+      display: flex;
+      gap: 20px;
+    }
+    #details-fin span { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    #details-fin strong { font-size: 20px; color: #333; }
     #message-fin { font-size: 16px; color: #555; max-width: 300px; text-align: center; }
 
     .btn-rouge {
@@ -286,7 +408,7 @@
 </head>
 <body>
 
-  <div id="chargement">Chargement des données... 🇨🇭</div>
+  <div id="chargement">Chargement... 🇨🇭</div>
 
   <div id="modal-overlay">
     <div id="modal">
@@ -301,24 +423,37 @@
 
   <!-- ACCUEIL -->
   <div id="ecran-accueil" class="ecran">
-    <div class="drapeau">🇨🇭</div>
-    <h1>SwissFaces</h1>
-    <p>Sauras-tu reconnaître les visages<br>de tes politiciens suisses ?</p>
-    <button class="btn-rouge" onclick="allerEcran('ecran-mode')">Jouer</button>
+    <div class="faces-preview" id="faces-preview"></div>
+    <div class="accueil-logo">
+      <h1>Poli<span>Face</span></h1>
+      <p class="accueil-tagline">Une tête, un parti.</p>
+    </div>
+    <div class="accueil-stats">
+      <div>
+        <strong id="stat-national">—</strong>
+        <span>Conseil national</span>
+      </div>
+      <div class="separateur"></div>
+      <div>
+        <strong id="stat-vaud">—</strong>
+        <span>Grand Conseil VD</span>
+      </div>
+    </div>
+    <button class="btn-rouge" onclick="allerEcran('ecran-mode')" style="padding: 16px 60px; font-size: 18px;">Jouer</button>
   </div>
 
-  <!-- CHOIX DU MODE -->
+  <!-- MODE -->
   <div id="ecran-mode" class="ecran">
     <h2>Choisir un mode</h2>
     <p>Quel parlement veux-tu tester ?</p>
     <div class="options-mode">
       <button onclick="choisirMode('national')">
         <span class="mode-titre">🏛️ Conseil national</span>
-        <span class="mode-desc" id="desc-national">Les 200 membres du parlement fédéral</span>
+        <span class="mode-desc" id="desc-national">Chargement...</span>
       </button>
       <button onclick="choisirMode('vaud')">
         <span class="mode-titre">🏔️ Grand Conseil vaudois</span>
-        <span class="mode-desc" id="desc-vaud">Les 150 députés du canton de Vaud</span>
+        <span class="mode-desc" id="desc-vaud">Chargement...</span>
       </button>
     </div>
     <button class="btn-gris" onclick="allerEcran('ecran-accueil')" style="margin-top:10px;">← Retour</button>
@@ -344,6 +479,10 @@
       <div id="compteur">Question 1 / 10</div>
     </div>
     <div id="barre-progression"><div id="progression" style="width:0%"></div></div>
+    <div id="chrono-container">
+      <div id="chrono-barre-bg"><div id="chrono-barre"></div></div>
+      <div id="chrono-texte">15s</div>
+    </div>
 
     <div id="carte">
       <div id="photo-wrapper">
@@ -353,6 +492,7 @@
       <div id="canton"></div>
       <div class="choix" id="choix"></div>
       <div id="feedback"></div>
+      <div id="points-flash"></div>
     </div>
 
     <button id="btn-suivant" onclick="suivant()">Suivant →</button>
@@ -363,6 +503,10 @@
   <div id="ecran-fin" class="ecran">
     <h2>Résultat final</h2>
     <div id="score-final"></div>
+    <div id="details-fin">
+      <span><strong id="fin-bonnes"></strong>bonnes réponses</span>
+      <span><strong id="fin-total"></strong>questions</span>
+    </div>
     <div id="message-fin"></div>
     <button class="btn-rouge" onclick="allerEcran('ecran-mode')">Rejouer</button>
     <button class="btn-gris" onclick="allerEcran('ecran-accueil')">Accueil</button>
@@ -374,12 +518,15 @@
     let politiciens = [];
     let tousLesPartis = [];
     let modeActuel = 'national';
-    let score = 0;
+    let scoreTotal = 0;
+    let bonnesReponses = 0;
     let questionActuelle = 0;
     let totalQuestions = 10;
     let ordre = [];
+    let chronoInterval = null;
+    let secondesEcoulees = 0;
+    const TEMPS_MAX = 15;
 
-    // Charger les deux fichiers de données
     Promise.all([
       fetch('politiciens.json').then(r => r.json()),
       fetch('deputes_vaud.json').then(r => r.json())
@@ -389,6 +536,18 @@
 
       document.getElementById("desc-national").textContent = donnéesNational.length + " conseillers nationaux";
       document.getElementById("desc-vaud").textContent = donnéesVaud.length + " députés vaudois";
+      document.getElementById("stat-national").textContent = donnéesNational.length;
+      document.getElementById("stat-vaud").textContent = donnéesVaud.length;
+
+      // Photos preview accueil — 5 photos aléatoires du national
+      const preview = document.getElementById("faces-preview");
+      const selection = [...donnéesNational].sort(() => Math.random() - 0.5).slice(0, 5);
+      selection.forEach(p => {
+        const img = document.createElement("img");
+        img.src = p.photo_locale;
+        img.alt = p.nom;
+        preview.appendChild(img);
+      });
 
       document.getElementById("chargement").style.display = "none";
       allerEcran('ecran-accueil');
@@ -414,10 +573,7 @@
 
     function choisirMode(mode) {
       modeActuel = mode;
-      const labels = {
-        'national': '🏛️ Conseil national',
-        'vaud': '🏔️ Grand Conseil vaudois'
-      };
+      const labels = { 'national': '🏛️ Conseil national', 'vaud': '🏔️ Grand Conseil vaudois' };
       document.getElementById("badge-mode").textContent = labels[mode];
       allerEcran('ecran-choix');
     }
@@ -428,39 +584,76 @@
       politiciens = modeActuel === 'national' ? donnéesNational : donnéesVaud;
       tousLesPartis = [...new Set(politiciens.map(p => p.parti))].filter(Boolean);
       totalQuestions = Math.min(nb, politiciens.length);
-      score = 0;
+      scoreTotal = 0;
+      bonnesReponses = 0;
       questionActuelle = 0;
       ordre = melangerTableau([...Array(politiciens.length).keys()]).slice(0, totalQuestions);
       allerEcran('ecran-jeu');
       setTimeout(chargerQuestion, 350);
     }
 
+    function demarrerChrono() {
+      arreterChrono();
+      secondesEcoulees = 0;
+      const barre = document.getElementById("chrono-barre");
+      const texte = document.getElementById("chrono-texte");
+      barre.style.transition = "none";
+      barre.style.width = "100%";
+      barre.className = "";
+      texte.textContent = TEMPS_MAX + "s";
+      setTimeout(() => { barre.style.transition = "width 1s linear, background 1s linear"; }, 50);
+
+      chronoInterval = setInterval(() => {
+        secondesEcoulees++;
+        const restantes = TEMPS_MAX - secondesEcoulees;
+        const pct = Math.max(0, restantes / TEMPS_MAX * 100);
+        barre.style.width = pct + "%";
+        texte.textContent = restantes > 0 ? restantes + "s" : "0s";
+        if (restantes <= 5 && restantes > 0) barre.className = "orange";
+        if (restantes <= 0) {
+          barre.className = "rouge";
+          barre.style.width = "0%";
+          clearInterval(chronoInterval);
+        }
+      }, 1000);
+    }
+
+    function arreterChrono() {
+      if (chronoInterval) { clearInterval(chronoInterval); chronoInterval = null; }
+    }
+
+    function calculerPoints() {
+      const restantes = Math.max(0, TEMPS_MAX - secondesEcoulees);
+      const bonus = Math.round(50 * (restantes / TEMPS_MAX));
+      return 50 + bonus;
+    }
+
     function chargerQuestion() {
       const p = politiciens[ordre[questionActuelle]];
-
       const img = document.getElementById("photo");
       const nomEl = document.getElementById("nom");
       const cantonEl = document.getElementById("canton");
+      const pointsEl = document.getElementById("points-flash");
 
       img.classList.remove('loaded');
       nomEl.classList.remove('visible');
       cantonEl.classList.remove('visible');
+      pointsEl.classList.remove('visible');
+      pointsEl.textContent = "";
 
       document.getElementById("feedback").textContent = "";
       document.getElementById("feedback").className = "";
       document.getElementById("btn-suivant").classList.remove('visible');
       document.getElementById("compteur").textContent = "Question " + (questionActuelle + 1) + " / " + totalQuestions;
-      document.getElementById("score-live").textContent = "Score : " + score;
+      document.getElementById("score-live").textContent = "Score : " + scoreTotal;
       document.getElementById("progression").style.width = (questionActuelle / totalQuestions * 100) + "%";
 
       img.onload = () => {
         img.classList.add('loaded');
         nomEl.textContent = p.nom;
         cantonEl.textContent = p.canton;
-        setTimeout(() => {
-          nomEl.classList.add('visible');
-          cantonEl.classList.add('visible');
-        }, 50);
+        setTimeout(() => { nomEl.classList.add('visible'); cantonEl.classList.add('visible'); }, 50);
+        demarrerChrono();
       };
       img.src = p.photo_locale;
 
@@ -480,46 +673,50 @@
     }
 
     function repondre(btn, choisi, correct) {
+      arreterChrono();
       document.querySelectorAll(".choix button").forEach(b => {
         b.disabled = true;
         if (b.textContent === correct) b.classList.add("correct");
       });
 
+      const pointsEl = document.getElementById("points-flash");
       if (choisi === correct) {
-        score++;
+        const pts = calculerPoints();
+        scoreTotal += pts;
+        bonnesReponses++;
         document.getElementById("feedback").textContent = "✅ Bonne réponse !";
         document.getElementById("feedback").className = "ok";
-        confetti({
-          particleCount: 60,
-          spread: 55,
-          origin: { y: 0.6 },
-          colors: ['#2ecc71', '#c0392b', '#f1c40f'],
-          scalar: 0.8
-        });
+        pointsEl.textContent = "+" + pts + " pts";
+        pointsEl.style.color = "#2ecc71";
+        setTimeout(() => pointsEl.classList.add('visible'), 50);
+        confetti({ particleCount: 60, spread: 55, origin: { y: 0.6 }, colors: ['#2ecc71', '#c0392b', '#f1c40f'], scalar: 0.8 });
       } else {
         btn.classList.add("faux");
         document.getElementById("feedback").textContent = "❌ Raté — c'était " + correct;
         document.getElementById("feedback").className = "ko";
+        pointsEl.textContent = "+0 pts";
+        pointsEl.style.color = "#e74c3c";
+        setTimeout(() => pointsEl.classList.add('visible'), 50);
       }
 
-      document.getElementById("score-live").textContent = "Score : " + score;
+      document.getElementById("score-live").textContent = "Score : " + scoreTotal;
       document.getElementById("btn-suivant").classList.add('visible');
     }
 
     function suivant() {
       questionActuelle++;
-      if (questionActuelle >= totalQuestions) {
-        afficherFin();
-      } else {
-        chargerQuestion();
-      }
+      if (questionActuelle >= totalQuestions) afficherFin();
+      else chargerQuestion();
     }
 
     function afficherFin() {
+      arreterChrono();
       allerEcran('ecran-fin');
       setTimeout(() => {
-        document.getElementById("score-final").innerHTML = score + "<span> / " + totalQuestions + "</span>";
-        const pct = score / totalQuestions;
+        document.getElementById("score-final").innerHTML = scoreTotal + "<span> pts</span>";
+        document.getElementById("fin-bonnes").textContent = bonnesReponses;
+        document.getElementById("fin-total").textContent = totalQuestions;
+        const pct = bonnesReponses / totalQuestions;
         let msg = "";
         if (pct === 1) msg = "Parfait ! Tu connais tes élus sur le bout des doigts. 🏆";
         else if (pct >= 0.8) msg = "Excellent résultat, tu maîtrises bien le paysage politique !";
@@ -527,21 +724,13 @@
         else if (pct >= 0.4) msg = "Tu commences à t'y faire — continue à jouer !";
         else msg = "Le paysage politique suisse n'a plus de secrets... à découvrir. 😄";
         document.getElementById("message-fin").textContent = msg;
+        if (pct >= 0.8) confetti({ particleCount: 150, spread: 80, origin: { y: 0.5 } });
       }, 350);
     }
 
-    function ouvrirModal() {
-      document.getElementById("modal-overlay").classList.add('actif');
-    }
-
-    function fermerModal() {
-      document.getElementById("modal-overlay").classList.remove('actif');
-    }
-
-    function confirmerAbandon() {
-      fermerModal();
-      allerEcran('ecran-accueil');
-    }
+    function ouvrirModal() { document.getElementById("modal-overlay").classList.add('actif'); }
+    function fermerModal() { document.getElementById("modal-overlay").classList.remove('actif'); }
+    function confirmerAbandon() { arreterChrono(); fermerModal(); allerEcran('ecran-accueil'); }
   </script>
 
 </body>
