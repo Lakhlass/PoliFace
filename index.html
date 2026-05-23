@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>SwissFaces — Connais-tu tes politiciens ?</title>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .ecran {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      max-width: 420px;
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+    .ecran.actif { display: flex; }
+    .ecran.visible { opacity: 1; transform: translateY(0); }
+
+    #ecran-accueil { text-align: center; gap: 20px; }
+    #ecran-accueil h1 { font-size: 42px; color: #c0392b; }
+    #ecran-accueil p { color: #555; font-size: 16px; }
+    .drapeau { font-size: 60px; margin-bottom: 10px; }
+
+    #ecran-choix { text-align: center; gap: 15px; }
+    #ecran-choix h2 { color: #333; font-size: 22px; }
+    #ecran-choix p { color: #777; font-size: 15px; }
+    .options-nb { display: flex; gap: 15px; margin-top: 10px; }
+    .options-nb button {
+      flex: 1;
+      padding: 20px;
+      font-size: 22px;
+      font-weight: bold;
+      border: 2px solid #ddd;
+      border-radius: 12px;
+      background: white;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .options-nb button:hover {
+      border-color: #c0392b;
+      color: #c0392b;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(192,57,43,0.15);
+    }
+
+    #ecran-jeu { gap: 15px; }
+    #barre-progression { width: 100%; background: #ddd; border-radius: 10px; height: 8px; }
+    #progression { height: 8px; background: #c0392b; border-radius: 10px; transition: width 0.4s ease; }
+    #compteur { color: #888; font-size: 14px; align-self: flex-end; }
+    #score-live { font-size: 16px; color: #333; align-self: flex-start; }
+
+    #carte {
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      text-align: center;
+      width: 100%;
+    }
+
+    #photo-wrapper {
+      width: 160px;
+      height: 160px;
+      margin: 0 auto 15px;
+    }
+    #carte img {
+      width: 160px;
+      height: 160px;
+      object-fit: cover;
+      border-radius: 50%;
+      border: 4px solid #ddd;
+      opacity: 0;
+      transform: scale(0.92);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    #carte img.loaded { opacity: 1; transform: scale(1); }
+
+    #nom {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 4px;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.3s ease 0.1s, transform 0.3s ease 0.1s;
+    }
+    #canton {
+      color: #888;
+      margin-bottom: 20px;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.3s ease 0.15s, transform 0.3s ease 0.15s;
+    }
+    #nom.visible, #canton.visible { opacity: 1; transform: translateY(0); }
+
+    .choix {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .choix button {
+      padding: 12px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      background: white;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.15s;
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    .choix button.visible { opacity: 1; transform: translateY(0); }
+    .choix button:hover:not(:disabled) {
+      background: #f0f0f0;
+      transform: translateY(-1px);
+      box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+    }
+    .choix button.correct {
+      background: #2ecc71;
+      color: white;
+      border-color: #2ecc71;
+      animation: pulse-correct 0.4s ease;
+    }
+    .choix button.faux {
+      background: #e74c3c;
+      color: white;
+      border-color: #e74c3c;
+      animation: shake 0.4s ease;
+    }
+
+    @keyframes pulse-correct {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+
+    #feedback {
+      font-size: 15px;
+      font-weight: bold;
+      min-height: 22px;
+      transition: opacity 0.2s;
+    }
+    #feedback.ok { color: #2ecc71; }
+    #feedback.ko { color: #e74c3c; }
+
+    #btn-suivant {
+      visibility: hidden;
+      padding: 10px 30px;
+      background: #c0392b;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 5px;
+      transition: background 0.2s, transform 0.15s, opacity 0.25s;
+      opacity: 0;
+    }
+    #btn-suivant.visible { visibility: visible; opacity: 1; }
+    #btn-suivant:hover { background: #a93226; transform: translateY(-1px); }
+
+    #btn-abandonner {
+      align-self: center;
+      background: none;
+      border: 1px solid #ddd;
+      color: #999;
+      font-size: 13px;
+      cursor: pointer;
+      padding: 7px 18px;
+      border-radius: 20px;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    #btn-abandonner:hover { color: #c0392b; border-color: #c0392b; }
+
+    #modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      animation: fadeIn 0.2s ease;
+    }
+    #modal-overlay.actif { display: flex; }
+    #modal {
+      background: white;
+      border-radius: 14px;
+      padding: 30px;
+      max-width: 300px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+      animation: slideUp 0.25s ease;
+    }
+    #modal h3 { margin-bottom: 10px; color: #333; }
+    #modal p { color: #777; font-size: 14px; margin-bottom: 20px; }
+    .modal-boutons { display: flex; gap: 10px; justify-content: center; }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    #ecran-fin { text-align: center; gap: 20px; }
+    #ecran-fin h2 { font-size: 28px; color: #333; }
+    #score-final { font-size: 52px; font-weight: bold; color: #c0392b; }
+    #score-final span { font-size: 22px; color: #888; }
+    #message-fin { font-size: 16px; color: #555; max-width: 300px; text-align: center; }
+
+    .btn-rouge {
+      padding: 14px 40px;
+      background: #c0392b;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 17px;
+      cursor: pointer;
+      margin-top: 5px;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .btn-rouge:hover { background: #a93226; transform: translateY(-1px); }
+    .btn-gris {
+      padding: 10px 25px;
+      background: white;
+      color: #888;
+      border: 2px solid #ddd;
+      border-radius: 10px;
+      font-size: 15px;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .btn-gris:hover { border-color: #aaa; color: #555; }
+
+    #chargement {
+      text-align: center;
+      color: #888;
+      font-size: 16px;
+      padding: 40px;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="chargement">Chargement des données... 🇨🇭</div>
+
+  <div id="modal-overlay">
+    <div id="modal">
+      <h3>Abandonner la partie ?</h3>
+      <p>Ta progression sera perdue et tu retourneras à l'accueil.</p>
+      <div class="modal-boutons">
+        <button class="btn-rouge" onclick="confirmerAbandon()">Oui, quitter</button>
+        <button class="btn-gris" onclick="fermerModal()">Continuer</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="ecran-accueil" class="ecran">
+    <div class="drapeau">🇨🇭</div>
+    <h1>SwissFaces</h1>
+    <p>Sauras-tu reconnaître les visages<br>du Conseil national suisse ?</p>
+    <p id="nb-politiciens" style="color:#c0392b; font-weight:bold;"></p>
+    <button class="btn-rouge" onclick="allerChoix()">Jouer</button>
+  </div>
+
+  <div id="ecran-choix" class="ecran">
+    <h2>Combien de questions ?</h2>
+    <p>Choisis le nombre de politiciens<br>que tu veux deviner</p>
+    <div class="options-nb">
+      <button onclick="demarrer(10)">10</button>
+      <button onclick="demarrer(20)">20</button>
+      <button onclick="demarrer(30)">30</button>
+    </div>
+    <button class="btn-gris" onclick="allerEcran('ecran-accueil')">← Retour</button>
+  </div>
+
+  <div id="ecran-jeu" class="ecran">
+    <div style="width:100%; display:flex; justify-content:space-between; align-items:center;">
+      <div id="score-live">Score : 0</div>
+      <div id="compteur">Question 1 / 10</div>
+    </div>
+    <div id="barre-progression"><div id="progression" style="width:0%"></div></div>
+
+    <div id="carte">
+      <div id="photo-wrapper">
+        <img id="photo" src="" alt="">
+      </div>
+      <div id="nom"></div>
+      <div id="canton"></div>
+      <div class="choix" id="choix"></div>
+      <div id="feedback"></div>
+    </div>
+
+    <button id="btn-suivant" onclick="suivant()">Suivant →</button>
+    <button id="btn-abandonner" onclick="ouvrirModal()">✕ Abandonner</button>
+  </div>
+
+  <div id="ecran-fin" class="ecran">
+    <h2>Résultat final</h2>
+    <div id="score-final"></div>
+    <div id="message-fin"></div>
+    <button class="btn-rouge" onclick="allerChoix()">Rejouer</button>
+    <button class="btn-gris" onclick="allerEcran('ecran-accueil')">Accueil</button>
+  </div>
+
+  <script>
+    let politiciens = [];
+    let tousLesPartis = [];
+    let score = 0;
+    let questionActuelle = 0;
+    let totalQuestions = 10;
+    let ordre = [];
+
+    fetch('politiciens.json')
+      .then(r => r.json())
+      .then(data => {
+        politiciens = data.filter(p => p.nom && p.parti && p.canton && p.photo_locale);
+        tousLesPartis = [...new Set(politiciens.map(p => p.parti))].filter(Boolean);
+        document.getElementById("chargement").style.display = "none";
+        document.getElementById("nb-politiciens").textContent = politiciens.length + " conseillers nationaux";
+        allerEcran('ecran-accueil');
+      })
+      .catch(err => {
+        document.getElementById("chargement").textContent = "Erreur de chargement.";
+        console.error(err);
+      });
+
+    function allerEcran(id) {
+      const actifs = document.querySelectorAll('.ecran.actif');
+      actifs.forEach(e => {
+        e.classList.remove('visible');
+        setTimeout(() => e.classList.remove('actif'), 300);
+      });
+      setTimeout(() => {
+        const cible = document.getElementById(id);
+        cible.classList.add('actif');
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => cible.classList.add('visible'));
+        });
+      }, 300);
+    }
+
+    function allerChoix() { allerEcran('ecran-choix'); }
+
+    function melangerTableau(arr) { return arr.sort(() => Math.random() - 0.5); }
+
+    function demarrer(nb) {
+      totalQuestions = Math.min(nb, politiciens.length);
+      score = 0;
+      questionActuelle = 0;
+      ordre = melangerTableau([...Array(politiciens.length).keys()]).slice(0, totalQuestions);
+      allerEcran('ecran-jeu');
+      setTimeout(chargerQuestion, 350);
+    }
+
+    function chargerQuestion() {
+      const p = politiciens[ordre[questionActuelle]];
+
+      const img = document.getElementById("photo");
+      const nomEl = document.getElementById("nom");
+      const cantonEl = document.getElementById("canton");
+
+      img.classList.remove('loaded');
+      nomEl.classList.remove('visible');
+      cantonEl.classList.remove('visible');
+
+      document.getElementById("feedback").textContent = "";
+      document.getElementById("feedback").className = "";
+      document.getElementById("btn-suivant").classList.remove('visible');
+      document.getElementById("compteur").textContent = "Question " + (questionActuelle + 1) + " / " + totalQuestions;
+      document.getElementById("score-live").textContent = "Score : " + score;
+      document.getElementById("progression").style.width = (questionActuelle / totalQuestions * 100) + "%";
+
+      img.onload = () => {
+        img.classList.add('loaded');
+        nomEl.textContent = p.nom;
+        cantonEl.textContent = p.canton;
+        setTimeout(() => {
+          nomEl.classList.add('visible');
+          cantonEl.classList.add('visible');
+        }, 50);
+      };
+      img.src = p.photo_locale;
+
+      let mauvais = tousLesPartis.filter(x => x !== p.parti);
+      melangerTableau(mauvais);
+      let options = melangerTableau([p.parti, mauvais[0], mauvais[1], mauvais[2]]);
+
+      const choixDiv = document.getElementById("choix");
+      choixDiv.innerHTML = "";
+      options.forEach((parti, i) => {
+        const btn = document.createElement("button");
+        btn.textContent = parti;
+        btn.onclick = () => repondre(btn, parti, p.parti);
+        choixDiv.appendChild(btn);
+        setTimeout(() => btn.classList.add('visible'), 200 + i * 60);
+      });
+    }
+
+    function repondre(btn, choisi, correct) {
+      document.querySelectorAll(".choix button").forEach(b => {
+        b.disabled = true;
+        if (b.textContent === correct) b.classList.add("correct");
+      });
+
+      if (choisi === correct) {
+        score++;
+        document.getElementById("feedback").textContent = "✅ Bonne réponse !";
+        document.getElementById("feedback").className = "ok";
+        confetti({
+          particleCount: 60,
+          spread: 55,
+          origin: { y: 0.6 },
+          colors: ['#2ecc71', '#c0392b', '#f1c40f'],
+          scalar: 0.8
+        });
+      } else {
+        btn.classList.add("faux");
+        document.getElementById("feedback").textContent = "❌ Raté — c'était " + correct;
+        document.getElementById("feedback").className = "ko";
+      }
+
+      document.getElementById("score-live").textContent = "Score : " + score;
+      document.getElementById("btn-suivant").classList.add('visible');
+    }
+
+    function suivant() {
+      questionActuelle++;
+      if (questionActuelle >= totalQuestions) {
+        afficherFin();
+      } else {
+        chargerQuestion();
+      }
+    }
+
+    function afficherFin() {
+      allerEcran('ecran-fin');
+      setTimeout(() => {
+        document.getElementById("score-final").innerHTML = score + "<span> / " + totalQuestions + "</span>";
+        const pct = score / totalQuestions;
+        let msg = "";
+        if (pct === 1) msg = "Parfait ! Tu connais tes élus sur le bout des doigts. 🏆";
+        else if (pct >= 0.8) msg = "Excellent résultat, tu maîtrises bien le paysage politique suisse !";
+        else if (pct >= 0.6) msg = "Pas mal ! Encore un peu d'entraînement et tu seras imbattable.";
+        else if (pct >= 0.4) msg = "Tu commences à t'y faire — continue à jouer !";
+        else msg = "Le paysage politique suisse n'a plus de secrets... à découvrir. 😄";
+        document.getElementById("message-fin").textContent = msg;
+      }, 350);
+    }
+
+    function ouvrirModal() {
+      document.getElementById("modal-overlay").classList.add('actif');
+    }
+
+    function fermerModal() {
+      document.getElementById("modal-overlay").classList.remove('actif');
+    }
+
+    function confirmerAbandon() {
+      fermerModal();
+      allerEcran('ecran-accueil');
+    }
+  </script>
+
+</body>
+</html>
