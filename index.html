@@ -36,9 +36,36 @@
     #ecran-accueil p { color: #555; font-size: 16px; }
     .drapeau { font-size: 60px; margin-bottom: 10px; }
 
+    #ecran-mode { text-align: center; gap: 15px; }
+    #ecran-mode h2 { color: #333; font-size: 22px; }
+    #ecran-mode p { color: #777; font-size: 15px; }
+    .options-mode { display: flex; flex-direction: column; gap: 12px; margin-top: 10px; width: 100%; }
+    .options-mode button {
+      width: 100%;
+      padding: 18px;
+      font-size: 16px;
+      font-weight: bold;
+      border: 2px solid #ddd;
+      border-radius: 12px;
+      background: white;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: left;
+    }
+    .options-mode button:hover {
+      border-color: #c0392b;
+      color: #c0392b;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(192,57,43,0.15);
+    }
+    .options-mode button .mode-titre { font-size: 17px; display: block; }
+    .options-mode button .mode-desc { font-size: 13px; color: #888; font-weight: normal; display: block; margin-top: 3px; }
+    .options-mode button:hover .mode-desc { color: #c0392b; }
+
     #ecran-choix { text-align: center; gap: 15px; }
     #ecran-choix h2 { color: #333; font-size: 22px; }
     #ecran-choix p { color: #777; font-size: 15px; }
+    #titre-mode-choix { color: #c0392b; font-weight: bold; font-size: 14px; }
     .options-nb { display: flex; gap: 15px; margin-top: 10px; }
     .options-nb button {
       flex: 1;
@@ -72,18 +99,15 @@
       text-align: center;
       width: 100%;
     }
-
-    #photo-wrapper {
-      width: 160px;
-      height: 160px;
-      margin: 0 auto 15px;
-    }
-    #carte img {
+    #photo-wrapper { width: 160px; height: 160px; margin: 0 auto 15px; }
+#carte img {
       width: 160px;
       height: 160px;
       object-fit: cover;
+      object-position: center top;
       border-radius: 50%;
       border: 4px solid #ddd;
+      background: white;
       opacity: 0;
       transform: scale(0.92);
       transition: opacity 0.3s ease, transform 0.3s ease;
@@ -154,12 +178,7 @@
       75% { transform: translateX(5px); }
     }
 
-    #feedback {
-      font-size: 15px;
-      font-weight: bold;
-      min-height: 22px;
-      transition: opacity 0.2s;
-    }
+    #feedback { font-size: 15px; font-weight: bold; min-height: 22px; transition: opacity 0.2s; }
     #feedback.ok { color: #2ecc71; }
     #feedback.ko { color: #e74c3c; }
 
@@ -253,11 +272,15 @@
     }
     .btn-gris:hover { border-color: #aaa; color: #555; }
 
-    #chargement {
-      text-align: center;
-      color: #888;
-      font-size: 16px;
-      padding: 40px;
+    #chargement { text-align: center; color: #888; font-size: 16px; padding: 40px; }
+
+    #badge-mode {
+      font-size: 12px;
+      background: #c0392b;
+      color: white;
+      padding: 3px 10px;
+      border-radius: 20px;
+      align-self: center;
     }
   </style>
 </head>
@@ -276,15 +299,34 @@
     </div>
   </div>
 
+  <!-- ACCUEIL -->
   <div id="ecran-accueil" class="ecran">
     <div class="drapeau">🇨🇭</div>
     <h1>SwissFaces</h1>
-    <p>Sauras-tu reconnaître les visages<br>du Conseil national suisse ?</p>
-    <p id="nb-politiciens" style="color:#c0392b; font-weight:bold;"></p>
-    <button class="btn-rouge" onclick="allerChoix()">Jouer</button>
+    <p>Sauras-tu reconnaître les visages<br>de tes politiciens suisses ?</p>
+    <button class="btn-rouge" onclick="allerEcran('ecran-mode')">Jouer</button>
   </div>
 
+  <!-- CHOIX DU MODE -->
+  <div id="ecran-mode" class="ecran">
+    <h2>Choisir un mode</h2>
+    <p>Quel parlement veux-tu tester ?</p>
+    <div class="options-mode">
+      <button onclick="choisirMode('national')">
+        <span class="mode-titre">🏛️ Conseil national</span>
+        <span class="mode-desc" id="desc-national">Les 200 membres du parlement fédéral</span>
+      </button>
+      <button onclick="choisirMode('vaud')">
+        <span class="mode-titre">🏔️ Grand Conseil vaudois</span>
+        <span class="mode-desc" id="desc-vaud">Les 150 députés du canton de Vaud</span>
+      </button>
+    </div>
+    <button class="btn-gris" onclick="allerEcran('ecran-accueil')" style="margin-top:10px;">← Retour</button>
+  </div>
+
+  <!-- CHOIX DU NOMBRE -->
   <div id="ecran-choix" class="ecran">
+    <div id="badge-mode"></div>
     <h2>Combien de questions ?</h2>
     <p>Choisis le nombre de politiciens<br>que tu veux deviner</p>
     <div class="options-nb">
@@ -292,9 +334,10 @@
       <button onclick="demarrer(20)">20</button>
       <button onclick="demarrer(30)">30</button>
     </div>
-    <button class="btn-gris" onclick="allerEcran('ecran-accueil')">← Retour</button>
+    <button class="btn-gris" onclick="allerEcran('ecran-mode')">← Retour</button>
   </div>
 
+  <!-- JEU -->
   <div id="ecran-jeu" class="ecran">
     <div style="width:100%; display:flex; justify-content:space-between; align-items:center;">
       <div id="score-live">Score : 0</div>
@@ -316,35 +359,43 @@
     <button id="btn-abandonner" onclick="ouvrirModal()">✕ Abandonner</button>
   </div>
 
+  <!-- FIN -->
   <div id="ecran-fin" class="ecran">
     <h2>Résultat final</h2>
     <div id="score-final"></div>
     <div id="message-fin"></div>
-    <button class="btn-rouge" onclick="allerChoix()">Rejouer</button>
+    <button class="btn-rouge" onclick="allerEcran('ecran-mode')">Rejouer</button>
     <button class="btn-gris" onclick="allerEcran('ecran-accueil')">Accueil</button>
   </div>
 
   <script>
+    let donnéesNational = [];
+    let donnéesVaud = [];
     let politiciens = [];
     let tousLesPartis = [];
+    let modeActuel = 'national';
     let score = 0;
     let questionActuelle = 0;
     let totalQuestions = 10;
     let ordre = [];
 
-    fetch('politiciens.json')
-      .then(r => r.json())
-      .then(data => {
-        politiciens = data.filter(p => p.nom && p.parti && p.canton && p.photo_locale);
-        tousLesPartis = [...new Set(politiciens.map(p => p.parti))].filter(Boolean);
-        document.getElementById("chargement").style.display = "none";
-        document.getElementById("nb-politiciens").textContent = politiciens.length + " conseillers nationaux";
-        allerEcran('ecran-accueil');
-      })
-      .catch(err => {
-        document.getElementById("chargement").textContent = "Erreur de chargement.";
-        console.error(err);
-      });
+    // Charger les deux fichiers de données
+    Promise.all([
+      fetch('politiciens.json').then(r => r.json()),
+      fetch('deputes_vaud.json').then(r => r.json())
+    ]).then(([national, vaud]) => {
+      donnéesNational = national.filter(p => p.nom && p.parti && p.canton && p.photo_locale);
+      donnéesVaud = vaud.filter(p => p.nom && p.parti && p.canton && p.photo_locale);
+
+      document.getElementById("desc-national").textContent = donnéesNational.length + " conseillers nationaux";
+      document.getElementById("desc-vaud").textContent = donnéesVaud.length + " députés vaudois";
+
+      document.getElementById("chargement").style.display = "none";
+      allerEcran('ecran-accueil');
+    }).catch(err => {
+      document.getElementById("chargement").textContent = "Erreur de chargement.";
+      console.error(err);
+    });
 
     function allerEcran(id) {
       const actifs = document.querySelectorAll('.ecran.actif');
@@ -361,11 +412,21 @@
       }, 300);
     }
 
-    function allerChoix() { allerEcran('ecran-choix'); }
+    function choisirMode(mode) {
+      modeActuel = mode;
+      const labels = {
+        'national': '🏛️ Conseil national',
+        'vaud': '🏔️ Grand Conseil vaudois'
+      };
+      document.getElementById("badge-mode").textContent = labels[mode];
+      allerEcran('ecran-choix');
+    }
 
     function melangerTableau(arr) { return arr.sort(() => Math.random() - 0.5); }
 
     function demarrer(nb) {
+      politiciens = modeActuel === 'national' ? donnéesNational : donnéesVaud;
+      tousLesPartis = [...new Set(politiciens.map(p => p.parti))].filter(Boolean);
       totalQuestions = Math.min(nb, politiciens.length);
       score = 0;
       questionActuelle = 0;
@@ -461,7 +522,7 @@
         const pct = score / totalQuestions;
         let msg = "";
         if (pct === 1) msg = "Parfait ! Tu connais tes élus sur le bout des doigts. 🏆";
-        else if (pct >= 0.8) msg = "Excellent résultat, tu maîtrises bien le paysage politique suisse !";
+        else if (pct >= 0.8) msg = "Excellent résultat, tu maîtrises bien le paysage politique !";
         else if (pct >= 0.6) msg = "Pas mal ! Encore un peu d'entraînement et tu seras imbattable.";
         else if (pct >= 0.4) msg = "Tu commences à t'y faire — continue à jouer !";
         else msg = "Le paysage politique suisse n'a plus de secrets... à découvrir. 😄";
