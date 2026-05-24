@@ -768,7 +768,7 @@
           ligne.innerHTML = `
             <div class="lb-rang">${i < 3 ? rangs[i] : (i + 1)}</div>
             <div class="lb-info">
-              <div class="lb-pseudo">${s.pseudo}</div>
+              <div class="lb-pseudo">${s.pseudo.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
               <div class="lb-details">${s.bonnes} bonnes / ${s.questions} questions</div>
             </div>
             <div class="lb-score">${s.score} pts</div>
