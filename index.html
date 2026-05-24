@@ -32,10 +32,7 @@
     .ecran.visible { opacity: 1; transform: translateY(0); }
 
     /* ACCUEIL */
-    #ecran-accueil {
-      text-align: center;
-      gap: 24px;
-    }
+    #ecran-accueil { text-align: center; gap: 24px; }
 
     .faces-preview {
       display: flex;
@@ -72,9 +69,7 @@
       letter-spacing: -1px;
       line-height: 1;
     }
-    .accueil-logo h1 span {
-      color: #c0392b;
-    }
+    .accueil-logo h1 span { color: #c0392b; }
     .accueil-tagline {
       font-size: 16px;
       color: #777;
@@ -93,24 +88,9 @@
       align-items: center;
       gap: 2px;
     }
-    .accueil-stats strong {
-      font-size: 22px;
-      font-weight: 700;
-      color: #1a1a1a;
-    }
-    .accueil-stats span {
-      font-size: 12px;
-      color: #999;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .separateur {
-      width: 1px;
-      height: 40px;
-      background: #ddd;
-      align-self: center;
-    }
+    .accueil-stats strong { font-size: 22px; font-weight: 700; color: #1a1a1a; }
+    .accueil-stats span { font-size: 12px; color: #999; text-transform: uppercase; letter-spacing: 0.5px; }
+    .separateur { width: 1px; height: 40px; background: #ddd; align-self: center; }
 
     /* MODE */
     #ecran-mode { text-align: center; gap: 15px; }
@@ -167,19 +147,8 @@
     #barre-progression { width: 100%; background: #ddd; border-radius: 10px; height: 8px; }
     #progression { height: 8px; background: #c0392b; border-radius: 10px; transition: width 0.4s ease; }
 
-    #chrono-container {
-      width: 100%;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    #chrono-barre-bg {
-      flex: 1;
-      background: #ddd;
-      border-radius: 10px;
-      height: 6px;
-      overflow: hidden;
-    }
+    #chrono-container { width: 100%; display: flex; align-items: center; gap: 10px; }
+    #chrono-barre-bg { flex: 1; background: #ddd; border-radius: 10px; height: 6px; overflow: hidden; }
     #chrono-barre {
       height: 6px;
       background: #2ecc71;
@@ -356,19 +325,49 @@
     }
 
     /* FIN */
-    #ecran-fin { text-align: center; gap: 20px; }
+    #ecran-fin { text-align: center; gap: 16px; }
     #ecran-fin h2 { font-size: 28px; color: #333; }
     #score-final { font-size: 52px; font-weight: bold; color: #c0392b; }
     #score-final span { font-size: 22px; color: #888; }
-    #details-fin {
-      font-size: 14px;
-      color: #888;
-      display: flex;
-      gap: 20px;
-    }
+    #details-fin { font-size: 14px; color: #888; display: flex; gap: 20px; }
     #details-fin span { display: flex; flex-direction: column; align-items: center; gap: 4px; }
     #details-fin strong { font-size: 20px; color: #333; }
     #message-fin { font-size: 16px; color: #555; max-width: 300px; text-align: center; }
+
+    #recap {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 280px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    #recap::-webkit-scrollbar { width: 4px; }
+    #recap::-webkit-scrollbar-track { background: #f0f0f0; border-radius: 4px; }
+    #recap::-webkit-scrollbar-thumb { background: #ddd; border-radius: 4px; }
+
+    .recap-ligne {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: white;
+      border-radius: 10px;
+      padding: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.07);
+    }
+    .recap-ligne img {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      object-fit: cover;
+      object-position: center top;
+      flex-shrink: 0;
+    }
+    .recap-ligne .recap-info { flex: 1; text-align: left; }
+    .recap-ligne .recap-nom { font-size: 13px; font-weight: bold; color: #333; }
+    .recap-ligne .recap-resultat { font-size: 12px; color: #888; margin-top: 2px; }
+    .recap-ligne .recap-pts { font-size: 13px; font-weight: bold; }
 
     .btn-rouge {
       padding: 14px 40px;
@@ -395,7 +394,6 @@
     .btn-gris:hover { border-color: #aaa; color: #555; }
 
     #chargement { text-align: center; color: #888; font-size: 16px; padding: 40px; }
-
     #badge-mode {
       font-size: 12px;
       background: #c0392b;
@@ -508,6 +506,7 @@
       <span><strong id="fin-total"></strong>questions</span>
     </div>
     <div id="message-fin"></div>
+    <div id="recap"></div>
     <button class="btn-rouge" onclick="allerEcran('ecran-mode')">Rejouer</button>
     <button class="btn-gris" onclick="allerEcran('ecran-accueil')">Accueil</button>
   </div>
@@ -525,6 +524,7 @@
     let ordre = [];
     let chronoInterval = null;
     let secondesEcoulees = 0;
+    let historiqueReponses = [];
     const TEMPS_MAX = 15;
 
     Promise.all([
@@ -539,7 +539,6 @@
       document.getElementById("stat-national").textContent = donnéesNational.length;
       document.getElementById("stat-vaud").textContent = donnéesVaud.length;
 
-      // Photos preview accueil — 5 photos aléatoires du national
       const preview = document.getElementById("faces-preview");
       const selection = [...donnéesNational].sort(() => Math.random() - 0.5).slice(0, 5);
       selection.forEach(p => {
@@ -587,6 +586,7 @@
       scoreTotal = 0;
       bonnesReponses = 0;
       questionActuelle = 0;
+      historiqueReponses = [];
       ordre = melangerTableau([...Array(politiciens.length).keys()]).slice(0, totalQuestions);
       allerEcran('ecran-jeu');
       setTimeout(chargerQuestion, 350);
@@ -674,14 +674,26 @@
 
     function repondre(btn, choisi, correct) {
       arreterChrono();
+      const p = politiciens[ordre[questionActuelle]];
+
       document.querySelectorAll(".choix button").forEach(b => {
         b.disabled = true;
         if (b.textContent === correct) b.classList.add("correct");
       });
 
       const pointsEl = document.getElementById("points-flash");
+      const pts = choisi === correct ? calculerPoints() : 0;
+
+      historiqueReponses.push({
+        nom: p.nom,
+        photo: p.photo_locale,
+        parti: correct,
+        reponse: choisi,
+        correct: choisi === correct,
+        pts: pts
+      });
+
       if (choisi === correct) {
-        const pts = calculerPoints();
         scoreTotal += pts;
         bonnesReponses++;
         document.getElementById("feedback").textContent = "✅ Bonne réponse !";
@@ -716,6 +728,7 @@
         document.getElementById("score-final").innerHTML = scoreTotal + "<span> pts</span>";
         document.getElementById("fin-bonnes").textContent = bonnesReponses;
         document.getElementById("fin-total").textContent = totalQuestions;
+
         const pct = bonnesReponses / totalQuestions;
         let msg = "";
         if (pct === 1) msg = "Parfait ! Tu connais tes élus sur le bout des doigts. 🏆";
@@ -724,6 +737,23 @@
         else if (pct >= 0.4) msg = "Tu commences à t'y faire — continue à jouer !";
         else msg = "Le paysage politique suisse n'a plus de secrets... à découvrir. 😄";
         document.getElementById("message-fin").textContent = msg;
+
+        const recap = document.getElementById("recap");
+        recap.innerHTML = "";
+        historiqueReponses.forEach(r => {
+          const ligne = document.createElement("div");
+          ligne.className = "recap-ligne";
+          ligne.innerHTML = `
+            <img src="${r.photo}" style="border: 2px solid ${r.correct ? '#2ecc71' : '#e74c3c'};">
+            <div class="recap-info">
+              <div class="recap-nom">${r.nom}</div>
+              <div class="recap-resultat">${r.correct ? '✅ ' + r.parti : '❌ ' + r.reponse + ' → ' + r.parti}</div>
+            </div>
+            <div class="recap-pts" style="color:${r.correct ? '#2ecc71' : '#e74c3c'};">+${r.pts} pts</div>
+          `;
+          recap.appendChild(ligne);
+        });
+
         if (pct >= 0.8) confetti({ particleCount: 150, spread: 80, origin: { y: 0.5 } });
       }, 350);
     }
