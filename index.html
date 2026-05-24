@@ -1,10 +1,16 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-5RQVHL04WX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-5RQVHL04WX');
+  </script>
   <meta charset="UTF-8">
-  <meta charset="UTF-8">
-<link rel="icon" type="image/svg+xml" href="favicon.svg">
-<title>PoliFace — Une tête, un parti</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <title>PoliFace — Une tête, un parti</title>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
   <script type="module">
@@ -28,7 +34,7 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
-body {
+    body {
       font-family: 'Helvetica Neue', Arial, sans-serif;
       background-color: #f4f4f4;
       display: flex;
@@ -39,7 +45,7 @@ body {
       padding: 40px 20px;
     }
 
-.ecran {
+    .ecran {
       display: none;
       flex-direction: column;
       align-items: center;
@@ -97,27 +103,16 @@ body {
     /* CHOIX */
     #ecran-choix { text-align: center; gap: 15px; }
     #ecran-choix h2 { color: #333; font-size: 22px; }
-    #ecran-choix p { color: #777; font-size: 15px; }
-    .options-nb { display: flex; gap: 15px; margin-top: 10px; }
-    .options-nb button {
-      flex: 1; padding: 20px; font-size: 22px; font-weight: bold;
-      border: 2px solid #ddd; border-radius: 12px; background: white;
-      cursor: pointer; transition: all 0.2s;
-    }
-    .options-nb button:hover {
-      border-color: #c0392b; color: #c0392b;
-      transform: translateY(-2px); box-shadow: 0 4px 12px rgba(192,57,43,0.15);
-    }
     .btn-survival {
-      width: 100%; padding: 18px; font-size: 16px; font-weight: bold;
+      width: 100%; padding: 24px; font-size: 18px; font-weight: bold;
       border: 2px solid #e74c3c; border-radius: 12px; background: white;
-      cursor: pointer; transition: all 0.2s; color: #e74c3c; margin-top: 5px;
+      cursor: pointer; transition: all 0.2s; color: #e74c3c; text-align: left;
     }
     .btn-survival:hover {
       background: #e74c3c; color: white;
       transform: translateY(-2px); box-shadow: 0 4px 12px rgba(231,76,60,0.2);
     }
-    .survival-desc { font-size: 12px; color: #aaa; margin-top: 4px; }
+    .btn-survival:hover .mode-desc { color: white; }
 
     /* JEU */
     #ecran-jeu { gap: 15px; }
@@ -326,23 +321,22 @@ body {
     <button class="btn-gris" onclick="allerEcran('ecran-accueil')" style="margin-top:10px;">← Retour</button>
   </div>
 
- <!-- CHOIX DU NOMBRE -->
-<div id="ecran-choix" class="ecran">
-  <div id="badge-mode"></div>
-  <h2>Choisis ton mode</h2>
-  <div class="options-mode" style="margin-top:10px;">
-    <button onclick="demarrer(10)">
-      <span class="mode-titre">🎯 Mode classique</span>
-      <span class="mode-desc">10 questions — pas de pression</span>
-    </button>
-    <button class="btn-survival" onclick="demarrerSurvival()" style="text-align:left; padding:18px;">
-      <span class="mode-titre">💀 Mode Survival</span>
-      <span class="mode-desc" style="color:#e74c3c;">3 vies — score au leaderboard</span>
-    </button>
+  <!-- CHOIX DU MODE -->
+  <div id="ecran-choix" class="ecran">
+    <div id="badge-mode"></div>
+    <h2>Choisis ton mode</h2>
+    <div class="options-mode" style="margin-top:10px;">
+      <button onclick="demarrer(10)">
+        <span class="mode-titre">🎯 Mode classique</span>
+        <span class="mode-desc">10 questions — pas de pression</span>
+      </button>
+      <button class="btn-survival" onclick="demarrerSurvival()">
+        <span class="mode-titre">💀 Mode Survival</span>
+        <span class="mode-desc" style="color:#e74c3c;">3 vies — score au leaderboard</span>
+      </button>
+    </div>
+    <button class="btn-gris" onclick="allerEcran('ecran-mode')" style="margin-top:10px;">← Retour</button>
   </div>
-  <button class="btn-gris" onclick="allerEcran('ecran-mode')" style="margin-top:10px;">← Retour</button>
-</div>
-
 
   <!-- JEU -->
   <div id="ecran-jeu" class="ecran">
@@ -420,8 +414,6 @@ body {
     let historiqueReponses = [];
     let scoreDejaEnvoye = false;
     const TEMPS_MAX = 15;
-
-    const MOTS_INTERDITS = ["merde", "putain", "connard", "salope", "enculé", "pute", "baise", "fuck", "shit", "cul", "bite", "con", "idiot", "nazi", "hitler"];
 
     Promise.all([
       fetch('politiciens.json').then(r => r.json()),
@@ -635,7 +627,6 @@ body {
       allerEcran('ecran-fin');
       scoreDejaEnvoye = false;
 
-      // Afficher ou cacher le formulaire pseudo selon le mode
       const pseudoContainer = document.getElementById("pseudo-container");
       pseudoContainer.style.display = modeSurvival ? "flex" : "none";
       document.getElementById("pseudo-input").value = "";
@@ -677,36 +668,33 @@ body {
       }, 350);
     }
 
-function normaliserTexte(texte) {
-  return texte.toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, '') // enlève les accents
-    .replace(/1/g, 'i').replace(/!/g, 'i')
-    .replace(/0/g, 'o').replace(/3/g, 'e')
-    .replace(/4/g, 'a').replace(/5/g, 's')
-    .replace(/\$/g, 's').replace(/@/g, 'a')
-    .replace(/\+/g, 't').replace(/8/g, 'b')
-    .replace(/[^a-z]/g, '');
-}
+    function normaliserTexte(texte) {
+      return texte.toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, '')
+        .replace(/1/g, 'i').replace(/!/g, 'i')
+        .replace(/0/g, 'o').replace(/3/g, 'e')
+        .replace(/4/g, 'a').replace(/5/g, 's')
+        .replace(/\$/g, 's').replace(/@/g, 'a')
+        .replace(/\+/g, 't').replace(/8/g, 'b')
+        .replace(/[^a-z]/g, '');
+    }
 
-function pseudoValide(pseudo) {
-  if (pseudo.length < 2) return "Minimum 2 caractères.";
-  if (pseudo.length > 10) return "Maximum 10 caractères.";
-if (!/^[a-zA-Z0-9_\-. ]+$/i.test(pseudo)) return "Seules les lettres, chiffres, tirets et points sont autorisés.";
-  
-  const normalise = normaliserTexte(pseudo);
-const mots = [
-    "merde", "putain", "connard", "salope", "encule", "pute", "baise",
-    "fuck", "shit", "cul", "bite", "con", "nazi", "hitl", "sex",
-    "porn", "niqu", "fdp", "pede", "tapette", "negr", "viol", "kkk",
-    "isis", "jihad", "kill", "dead", "rape"
-];
-
-  
-  for (const mot of mots) {
-    if (normalise.includes(mot)) return "Pseudo non autorisé.";
-  }
-  return null;
-}
+    function pseudoValide(pseudo) {
+      if (pseudo.length < 2) return "Minimum 2 caractères.";
+      if (pseudo.length > 10) return "Maximum 10 caractères.";
+      if (!/^[a-zA-Z0-9_\-. ]+$/i.test(pseudo)) return "Seules les lettres, chiffres, tirets et points sont autorisés.";
+      const normalise = normaliserTexte(pseudo);
+      const mots = [
+        "merde", "putain", "connard", "salope", "encule", "pute", "baise",
+        "fuck", "shit", "cul", "bite", "con", "nazi", "hitl", "sex",
+        "porn", "niqu", "fdp", "pede", "tapette", "negr", "viol", "kkk",
+        "isis", "jihad", "kill", "dead", "rape"
+      ];
+      for (const mot of mots) {
+        if (normalise.includes(mot)) return "Pseudo non autorisé.";
+      }
+      return null;
+    }
 
     async function soumettreScore() {
       if (scoreDejaEnvoye) return;
@@ -796,15 +784,15 @@ const mots = [
     function fermerModal() { document.getElementById("modal-overlay").classList.remove('actif'); }
     function confirmerAbandon() { arreterChrono(); fermerModal(); allerEcran('ecran-accueil'); }
   </script>
-  
-<footer style="margin-top: 30px; text-align: center; font-size: 11px; color: #bbb; max-width: 420px; line-height: 1.8; padding-bottom: 10px;">
-  Photos Conseil national : © <a href="https://www.parlament.ch/fr/services/mediatheque/photos-conditions-utilisation" target="_blank" style="color:#bbb;">ParlCH / Services du Parlement suisse</a><br>
-  Photos Grand Conseil vaudois : © <a href="https://www.vd.ch/cha/bic/mentions-legales" target="_blank" style="color:#bbb;">État de Vaud</a><br>
-  <br>
-  Site indépendant et apartisan.<br>
-  Les données peuvent ne pas être à jour.<br>
-  Projet non commercial à but éducatif.
-</footer>
+
+  <footer style="margin-top: 30px; text-align: center; font-size: 11px; color: #bbb; max-width: 600px; line-height: 1.8; padding-bottom: 10px;">
+    Photos Conseil national : © <a href="https://www.parlament.ch/fr/services/mediatheque/photos-conditions-utilisation" target="_blank" style="color:#bbb;">ParlCH / Services du Parlement suisse</a><br>
+    Photos Grand Conseil vaudois : © <a href="https://www.vd.ch/cha/bic/mentions-legales" target="_blank" style="color:#bbb;">État de Vaud</a><br>
+    <br>
+    Site indépendant et apartisan.<br>
+    Les données peuvent ne pas être à jour.<br>
+    Projet non commercial à but éducatif.
+  </footer>
 
 </body>
 </html>
