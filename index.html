@@ -381,7 +381,7 @@ body {
     <div id="message-fin"></div>
     <div id="pseudo-container">
       <label>🏆 Entre ton pseudo pour le leaderboard Survival :</label>
-      <input type="text" id="pseudo-input" maxlength="20" placeholder="Ton pseudo...">
+      <input type="text" id="pseudo-input" maxlength="10" placeholder="Ton pseudo...">
       <div id="pseudo-error"></div>
       <button id="btn-soumettre" onclick="soumettreScore()">Enregistrer mon score</button>
       <button id="btn-passer" onclick="passerLeaderboard()">Passer →</button>
@@ -677,16 +677,36 @@ body {
       }, 350);
     }
 
-    function pseudoValide(pseudo) {
-      if (pseudo.length < 2) return "Minimum 2 caractères.";
-      if (pseudo.length > 20) return "Maximum 20 caractères.";
-      if (!/^[a-zA-Z0-9_\-. àâäéèêëîïôùûüç]+$/i.test(pseudo)) return "Caractères non autorisés.";
-      const lower = pseudo.toLowerCase();
-      for (const mot of MOTS_INTERDITS) {
-        if (lower.includes(mot)) return "Pseudo non autorisé.";
-      }
-      return null;
-    }
+function normaliserTexte(texte) {
+  return texte.toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, '') // enlève les accents
+    .replace(/1/g, 'i').replace(/!/g, 'i')
+    .replace(/0/g, 'o').replace(/3/g, 'e')
+    .replace(/4/g, 'a').replace(/5/g, 's')
+    .replace(/\$/g, 's').replace(/@/g, 'a')
+    .replace(/\+/g, 't').replace(/8/g, 'b')
+    .replace(/[^a-z]/g, '');
+}
+
+function pseudoValide(pseudo) {
+  if (pseudo.length < 2) return "Minimum 2 caractères.";
+  if (pseudo.length > 10) return "Maximum 10 caractères.";
+if (!/^[a-zA-Z0-9_\-. ]+$/i.test(pseudo)) return "Seules les lettres, chiffres, tirets et points sont autorisés.";
+  
+  const normalise = normaliserTexte(pseudo);
+const mots = [
+    "merde", "putain", "connard", "salope", "encule", "pute", "baise",
+    "fuck", "shit", "cul", "bite", "con", "nazi", "hitl", "sex",
+    "porn", "niqu", "fdp", "pede", "tapette", "negr", "viol", "kkk",
+    "isis", "jihad", "kill", "dead", "rape"
+];
+
+  
+  for (const mot of mots) {
+    if (normalise.includes(mot)) return "Pseudo non autorisé.";
+  }
+  return null;
+}
 
     async function soumettreScore() {
       if (scoreDejaEnvoye) return;
